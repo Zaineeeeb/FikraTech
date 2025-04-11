@@ -443,7 +443,7 @@ interface FaceDetection {
 }
 
 // API configuration
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API_URL = import.meta.env.VITE_API_URL || "https://hackathon-456421.uc.r.appspot.com";
 const API_ENDPOINTS = {
   predict: `${API_URL}/predict`,
   history: `${API_URL}/history`,

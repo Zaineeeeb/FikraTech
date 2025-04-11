@@ -55,6 +55,124 @@
               class="absolute top-0 right-0 h-3 w-3 bg-red-500 rounded-full"
             ></span>
           </button>
+
+          <!-- Notification dropdown -->
+          <div class="relative">
+            <transition
+              enter-active-class="transition ease-out duration-100"
+              enter-from-class="transform opacity-0 scale-95"
+              enter-to-class="transform opacity-100 scale-100"
+              leave-active-class="transition ease-in duration-75"
+              leave-from-class="transform opacity-100 scale-100"
+              leave-to-class="transform opacity-0 scale-95"
+            >
+              <div
+                v-if="showNotificationDropdown"
+                class="absolute right-0 mt-1 w-80 bg-white rounded-lg shadow-xl z-50 ring-1 ring-black ring-opacity-5 overflow-hidden"
+                style="max-height: 70vh; top: 100%"
+              >
+                <!-- Header -->
+                <div
+                  class="px-4 py-3 border-b border-gray-100 bg-gray-50 flex justify-between items-center sticky top-0 z-10"
+                >
+                  <p class="text-sm font-medium text-gray-700">Notifications</p>
+                  <button
+                    @click="markAllAsRead"
+                    class="text-xs text-purple-600 hover:text-purple-700 font-medium"
+                  >
+                    Mark all as read
+                  </button>
+                </div>
+
+                <!-- Notification List with scroll -->
+                <div
+                  class="divide-y divide-gray-100 overflow-y-auto"
+                  style="max-height: calc(70vh - 80px)"
+                >
+                  <div
+                    v-for="(message, index) in positiveMessages"
+                    :key="index"
+                    class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer flex items-start"
+                    :class="{ 'bg-purple-50': index === 0 }"
+                  >
+                    <div class="flex-shrink-0 mt-0.5">
+                      <div
+                        class="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          class="h-4 w-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    <div class="ml-3 flex-1">
+                      <p class="text-sm font-medium text-gray-900">
+                        {{ message }}
+                      </p>
+                      <div class="mt-1 flex justify-between items-center">
+                        <p class="text-xs text-gray-500">
+                          {{ formatTime(lastNotificationTime) }}
+                        </p>
+                        <span
+                          v-if="index === 0"
+                          class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800"
+                        >
+                          New
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Empty state -->
+                  <div
+                    v-if="positiveMessages.length === 0"
+                    class="px-4 py-6 text-center"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-12 w-12 mx-auto text-gray-300"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="1"
+                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                      />
+                    </svg>
+                    <p class="mt-2 text-sm text-gray-500">
+                      No new notifications
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Footer -->
+                <div
+                  class="px-4 py-2 border-t border-gray-100 bg-gray-50 text-center sticky bottom-0"
+                >
+                  <a
+                    href="#"
+                    class="text-xs font-medium text-purple-600 hover:text-purple-700"
+                  >
+                    View all notifications
+                  </a>
+                </div>
+              </div>
+            </transition>
+          </div>
+
           <div class="relative">
             <button
               @click="toggleUserDropdown"
@@ -636,7 +754,6 @@ import { ref } from "vue";
 // User data
 const userName = ref("Zaineb");
 const userInitials = ref("Z");
-const unreadNotifications = ref(3);
 const showDropdown = ref(false);
 const selectedMood = ref(null);
 
@@ -646,7 +763,6 @@ const tabs = ref([
     id: "dashboard",
     label: "Dashboard",
     icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6",
-    path: "/dashboard",
     notification: null,
   },
   {
@@ -768,13 +884,40 @@ const toggleUserDropdown = () => {
 };
 
 const logout = () => {
-  alert("Logging out...");
-  // In a real app, this would handle the logout process
+  router.push("/index");
 };
 
-const showNotifications = () => {
-  alert("Showing notifications...");
+const showNotificationDropdown = ref(false);
+const unreadNotifications = ref(true);
+const lastNotificationTime = ref(new Date());
+const positiveMessages = ref([
+  "You're doing great! Keep up the positive energy!",
+  "Remember to take breaks and practice self-care today.",
+  "Your progress is amazing! Celebrate small wins.",
+  "You have the power to make today wonderful!",
+  "Just a reminder: You're stronger than you think.",
+]);
+
+// Format time for display
+const formatTime = (date) => {
+  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 };
+
+// Show notifications dropdown
+const showNotifications = () => {
+  showNotificationDropdown.value = !showNotificationDropdown.value;
+  if (showNotificationDropdown.value) {
+    unreadNotifications.value = false;
+  }
+};
+
+// Check every 5 hours for new notifications
+onMounted(() => {
+  setInterval(() => {
+    unreadNotifications.value = true;
+    lastNotificationTime.value = new Date();
+  }, 5 * 60 * 60 * 1000); // 5 hours in milliseconds
+});
 
 const logMood = (moodId) => {
   selectedMood.value = moodId;

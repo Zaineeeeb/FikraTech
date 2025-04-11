@@ -113,25 +113,9 @@
                 </div>
               </div>
 
-              <!-- Remember me & Forgot password (Sign In only) -->
-              <div class="flex items-center justify-between" v-if="!isSignUp">
-                <label class="flex items-center text-gray-700 text-sm">
-                  <input
-                    type="checkbox"
-                    class="rounded text-purple-600 focus:ring-purple-500"
-                  />
-                  <span class="ml-2">Remember me</span>
-                </label>
-                <a
-                  href="#"
-                  class="text-sm text-purple-600 hover:text-purple-700"
-                >
-                  Forgot password?
-                </a>
-              </div>
-
               <!-- Submit -->
               <button
+                @click="handleRedirect"
                 type="submit"
                 class="w-full mt-6 bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-semibold shadow-md transition duration-300"
               >
@@ -178,6 +162,14 @@ const handleSubmit = () => {
       password: password.value,
     });
     // call your signup API here
+  }
+};
+const handleRedirect = () => {
+  if (!isSignUp.value) {
+    // Only redirect for Sign In
+    router.push("/dashboard/home-dashboard");
+  } else {
+    handleSubmit(); // For Sign Up, use the original behavior
   }
 };
 </script>
